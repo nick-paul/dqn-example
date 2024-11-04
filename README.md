@@ -16,4 +16,4 @@ python example.py
 ```
 
 
-![](.for_readme/example.webm)
+![](.for_readme/example.gif)
