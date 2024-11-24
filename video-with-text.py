@@ -4,6 +4,19 @@ import cv2  # For rendering text on frames
 import numpy as np
 from describe_frame import describe_frame
 from collections import deque
+from openai import OpenAI
+
+class RelPlayer:
+    def get_action(self, frame_description: dict) -> int:
+        rel = frame_description['ball_relative']
+        if 'left' in rel:
+            action = ACTION_LEFT
+        elif 'right' in rel:
+            action = ACTION_RIGHT
+        else:
+            action = ACTION_NOOP
+        print(f'{rel} -> {action_str(action)}')
+        return action
 
 class LLMPlayer:
     def __init__(self, prompt: str, local=True):
@@ -13,12 +26,44 @@ class LLMPlayer:
                 base_url="http://localhost:8080/v1",
                 api_key = "sk-no-key-required"
             )
+            self.model = 'local'
         else:
             raise ValueError('')
 
-    def get_action(frame_description: str) -> int:
-        prompt = self.prompt.replace('[FRAME_DESC]', frame_description)
+    def get_action(self, frame_description: dict) -> int:
+        prompt = self.prompt.replace('[FRAME_DESC]', frame_description['text'])
+        print(prompt)
 
+        chat_completion = self.client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model=self.model,
+        )
+
+        #print(chat_completion)
+        response = chat_completion.choices[0].message.content
+        print(response)
+
+        action = ACTION_NOOP
+        if response:
+            if 'LEFT' in response and 'RIGHT' in response:
+                print('BAD RESPONSE')
+                print(response)
+            elif 'LEFT' in response:
+                action = ACTION_LEFT
+            elif 'RIGHT' in response:
+                action = ACTION_RIGHT
+            elif "DON'T MOVE" in response:
+                action  = ACTION_NOOP
+            else:
+                print('BAD RESPONSE')
+                print(response)
+
+        return action
 
 
 
@@ -49,6 +94,15 @@ screen_width = 160  # Default width of Breakout (adjust if needed)
 upscale_factor = 3  # Upscale factor for text rendering
 
 previous_frame_descriptions = deque(maxlen=3)
+
+#player = RelPlayer()
+player = LLMPlayer(prompt="""
+Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. Here is the current frame:
+
+[FRAME_DESC]
+
+Which direction should I move the paddle? Say LEFT, RIGHT, or DON'T MOVE
+""")
 
 for episode in range(num_episodes):
     print(f"Starting episode {episode + 1}")
@@ -105,14 +159,7 @@ for episode in range(num_episodes):
             action = ACTION_FIRE
         else:
             if desc_data:
-                rel = desc_data['ball_relative']
-                if 'left' in rel:
-                    action = ACTION_LEFT
-                elif 'right' in rel:
-                    action = ACTION_RIGHT
-                else:
-                    action = ACTION_NOOP
-                print(f'{rel} -> {action_str(action)}')
+                action = player.get_action(desc_data)
             else:
                 action = ACTION_NOOP
 
