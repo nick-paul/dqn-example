@@ -2,3 +2,8 @@ gymnasium
 ale-py
 #torch
 #numpy
+numpy==1.26.4
+openai
+imageio[ffmpeg]
+gym[atari,accept-rom-license]
+opencv-python
