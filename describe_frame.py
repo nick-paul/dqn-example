@@ -86,4 +86,5 @@ def describe_frame(ball_curr, ball_prev, paddle_curr, _, screen_width) -> dict:
     return {
         'text': description,
         'ball_relative': ball_relative,
+        'ball_direction': ball_direction,
     }

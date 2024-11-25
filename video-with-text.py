@@ -2,9 +2,11 @@ import gym
 import imageio
 import cv2  # For rendering text on frames
 import numpy as np
-from describe_frame import describe_frame
 from collections import deque
 from openai import OpenAI
+
+from describe_frame import describe_frame
+from send_image_to_llm import send_image_to_llm
 
 class RelPlayer:
     def get_action(self, frame_description: dict) -> int:
@@ -69,14 +71,48 @@ class LLMPlayer:
         return action
 
 
-#player = RelPlayer()
-player = LLMPlayer(prompt="""
-Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
+class VisualLLMPlayer(LLMPlayer):
+    def __init__(self, prompt: str, local=True):
+        super().__init__(prompt=prompt, local=local)
 
-[FRAME_DESC]
+    def get_action(self, frame_description: dict) -> int:
+        frame = frame_description['frame']
+        prompt = self.prompt.replace('[BALL_DIRECTION]', frame_description['ball_direction'])
+        response = send_image_to_llm(frame, prompt, self.client)
+
+        print(response)
+
+        action = ACTION_NOOP
+        if response:
+            if 'LEFT' in response and 'RIGHT' in response:
+                print('BAD RESPONSE')
+                print(response)
+            elif 'LEFT' in response:
+                action = ACTION_LEFT
+            elif 'RIGHT' in response:
+                action = ACTION_RIGHT
+            elif "DON'T MOVE" in response:
+                action  = ACTION_NOOP
+            else:
+                print('BAD RESPONSE')
+                print(response)
+
+        return action
+
+#player = RelPlayer()
+#player = LLMPlayer(prompt="""
+#Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
+#
+#[FRAME_DESC]
+#
+#Which direction should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
+#""", local=False)
+
+player = VisualLLMPlayer(prompt="""
+This is a screenshot from atari breakout. The goal is to get the ball to hit the paddle at the bottom of the screen. You can move the paddle left, right, or do nothing. In this frame the ball is [BALL_DIRECTION].
 
 Which direction should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
-""", local=False)
+""", local=True)
 
 ACTION_NOOP = 0
 ACTION_FIRE = 1
@@ -141,6 +177,9 @@ for episode in range(num_episodes):
 
         # Render frame
         frame = env.render()
+
+        if desc_data:
+            desc_data['frame'] = frame
 
         # Upscale the frame for better text rendering
         frame_upscaled = cv2.resize(frame, (frame.shape[1] * upscale_factor, frame.shape[0] * upscale_factor))
