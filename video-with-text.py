@@ -28,7 +28,10 @@ class LLMPlayer:
             )
             self.model = 'local'
         else:
-            raise ValueError('')
+            with open('openapi-key.txt', 'r') as f:
+                key = f.read().strip()
+            self.client = OpenAI(api_key = key)
+            self.model = 'gpt-4o-mini'
 
     def get_action(self, frame_description: dict) -> int:
         prompt = self.prompt.replace('[FRAME_DESC]', frame_description['text'])
@@ -66,6 +69,14 @@ class LLMPlayer:
         return action
 
 
+#player = RelPlayer()
+player = LLMPlayer(prompt="""
+Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
+
+[FRAME_DESC]
+
+Which direction should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
+""", local=False)
 
 ACTION_NOOP = 0
 ACTION_FIRE = 1
@@ -95,14 +106,6 @@ upscale_factor = 3  # Upscale factor for text rendering
 
 previous_frame_descriptions = deque(maxlen=3)
 
-#player = RelPlayer()
-player = LLMPlayer(prompt="""
-Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. Here is the current frame:
-
-[FRAME_DESC]
-
-Which direction should I move the paddle? Say LEFT, RIGHT, or DON'T MOVE
-""")
 
 for episode in range(num_episodes):
     print(f"Starting episode {episode + 1}")
