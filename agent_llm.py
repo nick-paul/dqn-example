@@ -52,17 +52,19 @@ class LLMAgent:
                 'response': response,
             })
 
-            if 'LEFT' in response and 'RIGHT' in response:
-                print('BAD RESPONSE')
+            str_to_check = response.strip().splitlines()[-1]
+
+            if 'LEFT' in str_to_check and 'RIGHT' in str_to_check:
+                print('###\n### ^^ BAD RESPONSE\n###')
                 print(response)
-            elif 'LEFT' in response:
+            elif 'LEFT' in str_to_check:
                 action = ACTION_LEFT
-            elif 'RIGHT' in response:
+            elif 'RIGHT' in str_to_check:
                 action = ACTION_RIGHT
-            elif "STAY" in response:
+            elif "STAY" in str_to_check:
                 action  = ACTION_NOOP
             else:
-                print('BAD RESPONSE')
+                print('###\n### ^^ BAD RESPONSE\n###')
                 print(response)
 
         return action

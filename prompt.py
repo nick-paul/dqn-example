@@ -96,9 +96,9 @@ Which action do I take? LEFT, RIGHT, or STAY?
 def make_prompt(template, ball_curr, ball_prev, paddle_curr, paddle_prev, prev_action):
     return (
         template
-        .replace('[ball_curr]', ball_curr)
-        .replace('[ball_prev]', ball_prev)
-        .replace('[paddle_curr]', paddle_curr)
-        .replace('[paddle_prev]', paddle_prev)
+        .replace('[ball_curr]',   str(ball_curr))
+        .replace('[ball_prev]',   str(ball_prev))
+        .replace('[paddle_curr]', str(paddle_curr))
+        .replace('[paddle_prev]', str(paddle_prev))
         .replace('[prev_action]', prev_action)
     )

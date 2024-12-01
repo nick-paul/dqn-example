@@ -7,6 +7,8 @@ from actions import *
 from collections import deque
 import json
 from prompt import make_prompt, PROMPT_FULL_V1, PROMPT_SIMPLE_V1
+from actions import action_str, ACTION_RIGHT, ACTION_LEFT, ACTION_NOOP, ACTION_FIRE
+from typing import Optional
 
 
 from agent_paddleai import PaddleAIAgent
@@ -22,24 +24,44 @@ from agent_llm import LLMAgent
 #Should I move the paddle LEFT, move the paddle RIGHT, or STAY in place? Say LEFT, RIGHT, or STAY
 #""", local=False)
 
-player = SimpleAgent()
+#player = SimpleAgent()
 #player = PaddleAIAgent()
 
-#player = LLMAgent(
-#    prompt_generator=lambda fd: make_prompt(
-#        ball_curr=fd['ball_curr'],
-#        ball_prev=fd['ball_prev'],
-#        paddle_curr=fd['paddle_curr'],
-#        paddle_prev=fd['paddle_prev'],
-#        screen_width=fd['screen_width'],
-#        prev_action={
-#            ACTION_LEFT: 'left',
-#            ACTION_RIGHT: 'right',
-#            ACTION_NOOP: 'stay',
-#            ACTION_FIRE: 'stay'
-#        }[fd['last_action']].upper(),
-#    )
-#)
+player = LLMAgent(
+    local=True,
+    prompt_generator=lambda fd: make_prompt(
+        template=PROMPT_SIMPLE_V1,
+        ball_curr=fd['ball_curr'],
+        ball_prev=fd['ball_prev'],
+        paddle_curr=fd['paddle_curr'],
+        paddle_prev=fd['paddle_prev'],
+        prev_action={
+            ACTION_LEFT: 'left',
+            ACTION_RIGHT: 'right',
+            ACTION_NOOP: 'stay',
+            ACTION_FIRE: 'stay'
+        }[fd['last_action']].upper(),
+    )
+)
+
+def save_log(agent, run_id, total_reward=None) -> Optional[str]:
+    logfile = None
+    if len(agent.log) > 0:
+        log = {'log': agent.log}
+
+        if total_reward is None:
+            reward_str = 'running'
+        else:
+            reward_str = str(int(total_reward))
+            # Add reward to log
+            log['total_reward'] = total_reward
+
+        logfile = f'runs/log-{run_id}-{reward_str}.json'
+
+        with open(logfile, 'w') as f:
+            json.dump(log, f, indent=4)
+
+    return logfile
 
 
 def run():
@@ -58,9 +80,9 @@ def run():
     # Screen dimensions and upscale factor
     screen_width = 160  # Default width of Breakout (adjust if needed)
     upscale_factor = 3  # Upscale factor for text rendering
+    total_reward = 0
 
     previous_frame_descriptions = deque(maxlen=3)
-
 
     for episode in range(num_episodes):
         print(f"Starting episode {episode + 1}")
@@ -135,8 +157,10 @@ def run():
             ball_prev = ball_curr
             paddle_prev = paddle_curr
 
-            #if len(player.log) > 5:
-            #    done=True
+            # Save in progress logs
+            if len(player.log) > 0:
+                save_log(player, run_id, total_reward=None)
+
 
             framecount += 1
 
@@ -149,12 +173,8 @@ def run():
     print(f"Video saved successfully!")
 
     print('Writing log...')
-    if len(player.log) > 0:
-        log = {'log': player.log}
-        logfile = f'runs/log-{run_id}-{int(total_reward)}.json'
-        with open(logfile, 'w') as f:
-            json.dump(log, f, indent=4)
-        print(f'Saved log to {logfile}')
+    logfile = save_log(player, run_id, total_reward)
+    print(f'Saved log to {logfile}')
 
     # Close the environment
     env.close()
