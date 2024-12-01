@@ -168,7 +168,7 @@ def run():
             if len(player.log) > 0:
                 save_log(player, run_id, total_reward=None)
 
-            if framecount % 60 == 1:
+            if framecount % 30 == 1:
                 save_video(frames, run_id, framecount, total_reward)
 
 

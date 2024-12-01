@@ -33,7 +33,7 @@ Important Considerations:
 
 Task:
 
-    Based on the above inputs and considerations, decide whether the paddle should move LEFT, RIGHT, or STAY in order to prevent missing the ball and achieve the highest score.
+    Based on the above inputs and considerations, decide whether the paddle should move LEFT, RIGHT, or STAY in order to prevent missing the ball and achieve the highest score. Do not provide a python function to evaluate this result. You must figure it out yourself and provide a final answer for this frame in your response.
 
 Here are the inputs for the current frame:
 
@@ -89,6 +89,8 @@ Here are the inputs for the current frame:
     paddle_curr: [paddle_curr]
     paddle_prev: [paddle_prev]
     prev_action: [prev_action]
+
+Based on the above inputs and considerations, decide whether the paddle should move LEFT, RIGHT, or STAY in order to prevent missing the ball and achieve the highest score. Do not provide a python function to evaluate this result. You must figure it out yourself and provide a final answer for this frame in your response.
 
 Which action do I take? LEFT, RIGHT, or STAY?
 """
