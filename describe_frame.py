@@ -1,4 +1,4 @@
-def describe_frame(ball_curr, ball_prev, paddle_curr, _, screen_width) -> dict:
+def describe_frame(ball_curr, ball_prev, paddle_curr, paddle_prev, screen_width) -> dict:
     """
     Generates a text description of the game state for a single frame.
     
@@ -37,15 +37,15 @@ def describe_frame(ball_curr, ball_prev, paddle_curr, _, screen_width) -> dict:
     # Determine ball position relative to paddle
     ball_x, ball_y = ball_curr
     ball_relative_x = ball_x - paddle_curr
+    # Left or right of the paddle?
+    ball_paddle_dir = 'left' if ball_relative_x < 0 else 'right'
 
-    if ball_relative_x < -20:
-        ball_relative = "Far to the left of the paddle"
-    elif ball_relative_x < 0:
-        ball_relative = "Slightly to the left of the paddle"
-    elif ball_relative_x < 20:
+    if abs(ball_relative_x) < 8:
         ball_relative = "Above and aligned with the paddle"
+    elif abs(ball_relative_x) < 30:
+        ball_relative = f"Slightly to the {ball_paddle_dir} of the paddle"
     else:
-        ball_relative = "To the right of the paddle"
+        ball_relative = f"Far to the {ball_paddle_dir} of the paddle"
 
     # Determine ball direction (from previous position)
     dx = ball_curr[0] - ball_prev[0]
@@ -86,4 +86,11 @@ def describe_frame(ball_curr, ball_prev, paddle_curr, _, screen_width) -> dict:
     return {
         'text': description,
         'ball_relative': ball_relative,
+
+        # Pass through of input data
+        'ball_curr': ball_curr,
+        'ball_prev': ball_prev,
+        'paddle_curr': paddle_curr,
+        'paddle_prev': paddle_prev,
+        'screen_width': screen_width,
     }
