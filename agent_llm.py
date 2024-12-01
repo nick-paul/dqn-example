@@ -1,4 +1,5 @@
 from openai import OpenAI
+import time
 from actions import action_str, ACTION_RIGHT, ACTION_LEFT, ACTION_NOOP
 
 class LLMAgent:
@@ -50,6 +51,7 @@ class LLMAgent:
             self.log.append({
                 'prompt': prompt,
                 'response': response,
+                'stamp': time.time(),
             })
 
             str_to_check = response.strip().splitlines()[-1]

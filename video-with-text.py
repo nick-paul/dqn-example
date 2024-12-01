@@ -63,6 +63,13 @@ def save_log(agent, run_id, total_reward=None) -> Optional[str]:
 
     return logfile
 
+def save_video(frames, run_id, framecount, total_reward):
+    # Save frames as a video
+    video_filename = f"runs/breakout_{run_id}_{int(total_reward)}_checkpoint{framecount}.mp4"
+    print(f"Saving video to {video_filename}...")
+    imageio.mimsave(video_filename, frames, fps=30)
+    print(f"Video saved successfully!")
+
 
 def run():
     run_id = ''.join([chr(random.randint(97, 122)) for _ in range(8)])
@@ -161,16 +168,16 @@ def run():
             if len(player.log) > 0:
                 save_log(player, run_id, total_reward=None)
 
+            if framecount % 60 == 1:
+                save_video(frames, run_id, framecount, total_reward)
+
 
             framecount += 1
 
         print(f"Episode {episode + 1} finished with a total reward of {total_reward}")
 
     # Save frames as a video
-    video_filename = f"runs/breakout_{run_id}_{total_reward}.mp4"
-    print(f"Saving video to {video_filename}...")
-    imageio.mimsave(video_filename, frames, fps=30)
-    print(f"Video saved successfully!")
+    save_video(frames, run_id, framecount, total_reward)
 
     print('Writing log...')
     logfile = save_log(player, run_id, total_reward)
