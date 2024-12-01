@@ -48,17 +48,14 @@ class LLMAgent:
         action = ACTION_NOOP
         if response:
 
-            self.log.append({
-                'prompt': prompt,
-                'response': response,
-                'stamp': time.time(),
-            })
+            bad = False
 
             str_to_check = response.strip().splitlines()[-1]
 
             if 'LEFT' in str_to_check and 'RIGHT' in str_to_check:
                 print('###\n### ^^ BAD RESPONSE\n###')
                 print(response)
+                bad = True
             elif 'LEFT' in str_to_check:
                 action = ACTION_LEFT
             elif 'RIGHT' in str_to_check:
@@ -68,6 +65,15 @@ class LLMAgent:
             else:
                 print('###\n### ^^ BAD RESPONSE\n###')
                 print(response)
+                bad = True
+
+            self.log.append({
+                'prompt': prompt,
+                'response': response,
+                'stamp': time.time(),
+                'selected_action': action,
+                'bad': bad
+            })
 
         return action
 

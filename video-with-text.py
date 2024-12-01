@@ -24,25 +24,25 @@ from agent_llm import LLMAgent
 #Should I move the paddle LEFT, move the paddle RIGHT, or STAY in place? Say LEFT, RIGHT, or STAY
 #""", local=False)
 
-#player = SimpleAgent()
+player = SimpleAgent()
 #player = PaddleAIAgent()
 
-player = LLMAgent(
-    local=True,
-    prompt_generator=lambda fd: make_prompt(
-        template=PROMPT_SIMPLE_V1,
-        ball_curr=fd['ball_curr'],
-        ball_prev=fd['ball_prev'],
-        paddle_curr=fd['paddle_curr'],
-        paddle_prev=fd['paddle_prev'],
-        prev_action={
-            ACTION_LEFT: 'left',
-            ACTION_RIGHT: 'right',
-            ACTION_NOOP: 'stay',
-            ACTION_FIRE: 'stay'
-        }[fd['last_action']].upper(),
-    )
-)
+#player = LLMAgent(
+#    local=False,
+#    prompt_generator=lambda fd: make_prompt(
+#        template=PROMPT_FULL_V1,
+#        ball_curr=fd['ball_curr'],
+#        ball_prev=fd['ball_prev'],
+#        paddle_curr=fd['paddle_curr'],
+#        paddle_prev=fd['paddle_prev'],
+#        prev_action={
+#            ACTION_LEFT: 'left',
+#            ACTION_RIGHT: 'right',
+#            ACTION_NOOP: 'stay',
+#            ACTION_FIRE: 'stay'
+#        }[fd['last_action']].upper(),
+#    )
+#)
 
 def save_log(agent, run_id, total_reward=None) -> Optional[str]:
     logfile = None
@@ -132,11 +132,11 @@ def run():
             frame_upscaled = cv2.resize(frame, (frame.shape[1] * upscale_factor, frame.shape[0] * upscale_factor))
 
             # Render text on the upscaled frame
-            y0, dy = 20, 25  # Starting y-coordinate and line spacing for text
-            for i, line in enumerate(description.split('\n')):
-                y = y0 + i * dy
-                # Overlay the text (use smaller font size for readability)
-                cv2.putText(frame_upscaled, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
+            #y0, dy = 20, 25  # Starting y-coordinate and line spacing for text
+            #for i, line in enumerate(description.split('\n')):
+            #    y = y0 + i * dy
+            #    # Overlay the text (use smaller font size for readability)
+            #    cv2.putText(frame_upscaled, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
 
             # Store the final upscaled frame for video
             frames.append(frame_upscaled)
@@ -164,12 +164,13 @@ def run():
             ball_prev = ball_curr
             paddle_prev = paddle_curr
 
-            # Save in progress logs
-            if len(player.log) > 0:
-                save_log(player, run_id, total_reward=None)
+            if player.agent_type == 'llm':
+                # Save in progress logs
+                if len(player.log) > 0 and framecount % 10 == 0:
+                    save_log(player, run_id+f'-f{framecount}', total_reward=None)
 
-            if framecount % 30 == 1:
-                save_video(frames, run_id, framecount, total_reward)
+                if framecount % 30 == 1:
+                    save_video(frames, run_id, framecount, total_reward)
 
 
             framecount += 1

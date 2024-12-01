@@ -43,8 +43,9 @@ Here are the inputs for the current frame:
     paddle_prev: [paddle_prev]
     prev_action: [prev_action]
 
-Which action do I take? Your response must include a final answer: LEFT, RIGHT, or STAY?
+Which action do I take? The last line of your response must have the following format:
 
+Final answer: LEFT, RIGHT, or STAY
 """
 
 

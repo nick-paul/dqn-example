@@ -18,6 +18,10 @@ def describe_frame(ball_curr, ball_prev, paddle_curr, paddle_prev, screen_width)
     paddle_curr = int(paddle_curr)
     screen_width = int(screen_width)
 
+    # Add 10 to offset for center of paddle
+    paddle_curr += 10
+    paddle_prev += 10
+
     ppos = f'{paddle_curr}'
     bpos = f'{ball_curr[0], ball_curr[1]}'
     prev_bpos = f'{ball_prev[0], ball_prev[1]}'

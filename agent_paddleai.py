@@ -1,9 +1,6 @@
 from actions import ACTION_RIGHT, ACTION_LEFT, ACTION_NOOP, ACTION_FIRE
 
 def breakout_ai(ball_curr, ball_prev, paddle_curr, paddle_prev, screen_width, prev_action):
-    paddle_curr = paddle_curr + 10
-    paddle_prev = paddle_curr + 10
-
     # Ball velocity
     ball_velocity_x = ball_curr[0] - ball_prev[0]
     ball_velocity_y = ball_curr[1] - ball_prev[1]
