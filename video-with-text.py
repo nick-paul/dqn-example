@@ -5,8 +5,12 @@ import numpy as np
 from describe_frame import describe_frame
 from collections import deque
 from openai import OpenAI
+import json
 
 class RelPlayer:
+    def __init__(self):
+        self.log = [] # unused
+
     def get_action(self, frame_description: dict) -> int:
         rel = frame_description['ball_relative']
         if 'left' in rel:
@@ -20,6 +24,7 @@ class RelPlayer:
 
 class LLMPlayer:
     def __init__(self, prompt: str, local=True):
+        self.log = []
         self.prompt = prompt
         if local:
             self.client = OpenAI(
@@ -53,6 +58,12 @@ class LLMPlayer:
 
         action = ACTION_NOOP
         if response:
+
+            self.log.append({
+                'prompt': prompt,
+                'response': response,
+            })
+
             if 'LEFT' in response and 'RIGHT' in response:
                 print('BAD RESPONSE')
                 print(response)
@@ -60,7 +71,7 @@ class LLMPlayer:
                 action = ACTION_LEFT
             elif 'RIGHT' in response:
                 action = ACTION_RIGHT
-            elif "DON'T MOVE" in response:
+            elif "STAY" in response:
                 action  = ACTION_NOOP
             else:
                 print('BAD RESPONSE')
@@ -75,7 +86,7 @@ Lets play atari breakout. I will describe what is happening on the screen and yo
 
 [FRAME_DESC]
 
-Which direction should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
+Should I move the paddle LEFT, move the paddle RIGHT, or STAY in place? Say LEFT, RIGHT, or STAY
 """, local=False)
 
 ACTION_NOOP = 0
@@ -174,6 +185,9 @@ for episode in range(num_episodes):
         ball_prev = ball_curr
         paddle_prev = paddle_curr
 
+        #if len(player.log) > 5:
+        #    done=True
+
     print(f"Episode {episode + 1} finished with a total reward of {total_reward}")
 
 # Save frames as a video
@@ -181,5 +195,13 @@ print(f"Saving video to {video_filename}...")
 imageio.mimsave(video_filename, frames, fps=30)
 print(f"Video saved successfully!")
 
+print('Writing log...')
+if len(player.log) > 0:
+    log = {'log': player.log}
+    with open('log.json', 'w') as f:
+        json.dump(log, f, indent=4)
+
 # Close the environment
 env.close()
+
+
