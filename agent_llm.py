@@ -72,7 +72,8 @@ class LLMAgent:
                 'response': response,
                 'stamp': time.time(),
                 'selected_action': action,
-                'bad': bad
+                'bad': bad,
+                'model': self.model
             })
 
         return action
