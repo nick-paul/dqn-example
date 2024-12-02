@@ -27,22 +27,40 @@ from agent_llm import LLMAgent
 player = SimpleAgent()
 #player = PaddleAIAgent()
 
+### Basic LLM
+
+#basic_template = """
+#Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
+#
+#[FRAME_DESC]
+#
+#Based on where the ball is, where should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
+#"""
 #player = LLMAgent(
-#    local=False,
-#    prompt_generator=lambda fd: make_prompt(
-#        template=PROMPT_FULL_V1,
-#        ball_curr=fd['ball_curr'],
-#        ball_prev=fd['ball_prev'],
-#        paddle_curr=fd['paddle_curr'],
-#        paddle_prev=fd['paddle_prev'],
-#        prev_action={
-#            ACTION_LEFT: 'left',
-#            ACTION_RIGHT: 'right',
-#            ACTION_NOOP: 'stay',
-#            ACTION_FIRE: 'stay'
-#        }[fd['last_action']].upper(),
-#    )
+#    local=True,
+#    prompt_generator=lambda fd: basic_template.replace('[FRAME_DESC]', fd['text'])
 #)
+#player.model = 'llama-1b'
+
+### Advanced LLM
+
+player = LLMAgent(
+    local=True,
+    prompt_generator=lambda fd: make_prompt(
+        template=PROMPT_FULL_V1,
+        ball_curr=fd['ball_curr'],
+        ball_prev=fd['ball_prev'],
+        paddle_curr=fd['paddle_curr'],
+        paddle_prev=fd['paddle_prev'],
+        prev_action={
+            ACTION_LEFT: 'left',
+            ACTION_RIGHT: 'right',
+            ACTION_NOOP: 'stay',
+            ACTION_FIRE: 'stay'
+        }[fd['last_action']].upper(),
+    )
+)
+player.model = 'llama-3b'
 
 def save_log(agent, run_id, total_reward=None) -> Optional[str]:
     logfile = None
@@ -74,6 +92,8 @@ def save_video(frames, run_id, framecount, total_reward):
 def run():
     run_id = ''.join([chr(random.randint(97, 122)) for _ in range(8)])
     run_id += f'_{player.agent_type}'
+    if player.agent_type == 'llm':
+        run_id += '-' + player.model
 
     # Initialize the Atari Breakout environment
     env = gym.make('ALE/Breakout-v5', render_mode="rgb_array", obs_type='ram')
@@ -194,6 +214,8 @@ try:
 except:
     pass
 
+run()
+run()
 run()
 #for _ in range(100): run()
 
