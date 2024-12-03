@@ -15,52 +15,59 @@ from agent_paddleai import PaddleAIAgent
 from agent_simple import SimpleAgent
 from agent_llm import LLMAgent
 
-#player = RelPlayer()
-#player = LLMPlayer(prompt="""
-#Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
 #
-#[FRAME_DESC]
+# SELECT AGENT
 #
-#Should I move the paddle LEFT, move the paddle RIGHT, or STAY in place? Say LEFT, RIGHT, or STAY
-#""", local=False)
 
-player = SimpleAgent()
-#player = PaddleAIAgent()
+# Must be one of the following
+# simple, paddle, llm-basic, llm-complex
+AGENT = 'simple'
 
-### Basic LLM
+if AGENT == 'simple':
+    player = SimpleAgent()
 
-#basic_template = """
-#Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
-#
-#[FRAME_DESC]
-#
-#Based on where the ball is, where should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
-#"""
-#player = LLMAgent(
-#    local=True,
-#    prompt_generator=lambda fd: basic_template.replace('[FRAME_DESC]', fd['text'])
-#)
-#player.model = 'llama-1b'
+elif AGENT == 'paddle':
+    player = PaddleAIAgent()
 
-### Advanced LLM
+elif AGENT == 'llm-basic':
+    basic_template = """
+    Lets play atari breakout. I will describe what is happening on the screen and you will tell me which direction to the move the paddle or to keep it still. In order to win, you will need to move the paddle so that it is aligned with the ball. You may also choose not to move the paddle. Here is the current frame:
 
-player = LLMAgent(
-    local=True,
-    prompt_generator=lambda fd: make_prompt(
-        template=PROMPT_FULL_V1,
-        ball_curr=fd['ball_curr'],
-        ball_prev=fd['ball_prev'],
-        paddle_curr=fd['paddle_curr'],
-        paddle_prev=fd['paddle_prev'],
-        prev_action={
-            ACTION_LEFT: 'left',
-            ACTION_RIGHT: 'right',
-            ACTION_NOOP: 'stay',
-            ACTION_FIRE: 'stay'
-        }[fd['last_action']].upper(),
+    [FRAME_DESC]
+
+    Based on where the ball is, where should I move the paddle so it is aligned with the ball? Say LEFT, RIGHT, or STAY
+    """
+    player = LLMAgent(
+        local=True,
+        prompt_generator=lambda fd: basic_template.replace('[FRAME_DESC]', fd['text'])
     )
-)
-player.model = 'llama-3b'
+    player.model = 'llama-1b'
+
+elif AGENT == 'llm-complex':
+    player = LLMAgent(
+        local=True,
+        prompt_generator=lambda fd: make_prompt(
+            template=PROMPT_FULL_V1,
+            ball_curr=fd['ball_curr'],
+            ball_prev=fd['ball_prev'],
+            paddle_curr=fd['paddle_curr'],
+            paddle_prev=fd['paddle_prev'],
+            prev_action={
+                ACTION_LEFT: 'left',
+                ACTION_RIGHT: 'right',
+                ACTION_NOOP: 'stay',
+                ACTION_FIRE: 'stay'
+            }[fd['last_action']].upper(),
+        )
+    )
+    player.model = 'llama-3b' # set this if running local for logging purposes#
+else:
+    raise ValueError('Invalid agent type')
+
+
+#
+# LOGGING UTILITIES (video & json)
+#
 
 def save_log(agent, run_id, total_reward=None) -> Optional[str]:
     logfile = None
@@ -87,6 +94,11 @@ def save_video(frames, run_id, framecount, total_reward):
     print(f"Saving video to {video_filename}...")
     imageio.mimsave(video_filename, frames, fps=30)
     print(f"Video saved successfully!")
+
+
+#
+# MAIN RUN LOOP
+#
 
 
 def run():
@@ -208,6 +220,7 @@ def run():
     env.close()
 
 
+# Logging directory
 try:
     import os
     os.mkdir('runs')
@@ -215,8 +228,7 @@ except:
     pass
 
 run()
-run()
-run()
+# Or run it many times
 #for _ in range(100): run()
 
 

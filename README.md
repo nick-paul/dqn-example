@@ -25,6 +25,6 @@ Then you can run the atari game which will talk to the llamafile with this pytho
 python video-with-text.py
 ```
 
-It will take a little while to run. When it is done, it will generate an MP4 file in the same folder as the python script where you can see how the LLM did.
+It will take a little while to run. When it is done, it will generate an MP4 file in the runs folder so you can see how the LLM did.
 
 
